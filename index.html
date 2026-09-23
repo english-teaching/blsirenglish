@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Educational Study Material Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        body { background-color: #f4f7f6; color: #333; }
+        header { background: #1e3c72; color: white; padding: 18px; text-align: center; font-size: 20px; font-weight: bold; }
+        .breadcrumb { background: #e9ecef; padding: 12px 20px; font-size: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .breadcrumb span { cursor: pointer; color: #0056b3; font-weight: 600; }
+        .breadcrumb span:last-child { color: #6c757d; cursor: default; }
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 8px; padding: 20px; text-align: center; font-size: 18px; font-weight: bold; cursor: pointer; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card:hover { background: #f0f7ff; border-color: #0056b3; }
+        #pdf-view { width: 100%; overflow: hidden; }
+        .pdf-frame-wrapper {
+            position: relative;
+            width: 100%;
+            height: 75vh;
+            overflow: hidden;
+            border-radius: 8px;
+            background: white;
+        }
+        .pdf-container {
+            display: block;
+            position: absolute;
+            top: -54px;
+            left: -12px;
+            width: calc(100% + 24px);
+            height: calc(100% + 108px);
+            border: none;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <header>Study Material Portal</header>
+    <div class="breadcrumb" id="breadcrumb">
+        <span onclick="showClasses()">Classes</span>
+    </div>
+    <div class="container">
+        <div id="class-view" class="grid"></div>
+        <div id="subject-view" class="grid hidden"></div>
+        <div id="chapter-view" class="grid hidden"></div>
+        <div id="pdf-view" class="hidden">
+            <div class="pdf-frame-wrapper">
+                <iframe id="pdf-frame" class="pdf-container" src="" title="PDF viewer"></iframe>
+            </div>
+        </div>
+    </div>
+    <script>
+        const studyData = [
+            {
+                className: "Class 10",
+                subjects: [
+                    {
+                        subjectName: "English",
+                        chapters: [
+                            { chapterName: "bhugtan swikriti aadesh", pdf: "https://dn711403.ca.archive.org/0/items/bhugtan-swikriti-aadesh/Bhugtan%20swikriti%20aadesh.pdf" },
+                            { chapterName: "active passive", pdf: "https://ia601602.us.archive.org/14/items/active-passive/active%20passive.pdf" }
+                        ]
+                    }
+                ]
+            },
+            {
+                className: "Class 12",
+                subjects: [
+                    {
+                        subjectName: "English",
+                        chapters: [
+                            { chapterName: "The Last Lesson", pdf: "https://archive.org/embed/your-link-4" }
+                        ]
+                    }
+                ]
+            }
+        ];
+        let selectedClass = null;
+        let selectedSubject = null;
+        function hideAllViews() {
+            document.getElementById('class-view').classList.add('hidden');
+            document.getElementById('subject-view').classList.add('hidden');
+            document.getElementById('chapter-view').classList.add('hidden');
+            document.getElementById('pdf-view').classList.add('hidden');
+        }
+        function updateBreadcrumb(items) {
+            const bc = document.getElementById('breadcrumb');
+            bc.innerHTML = items.map((item, index) => {
+                if (index === items.length - 1) return `<span>${item.name}</span>`;
+                return `<span onclick="${item.action}">${item.name}</span> &gt; `;
+            }).join('');
+        }
+        function showClasses() {
+            hideAllViews();
+            const container = document.getElementById('class-view');
+            container.innerHTML = '';
+            studyData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerText = item.className;
+                div.onclick = () => showSubjects(item);
+                container.appendChild(div);
+            });
+            container.classList.remove('hidden');
+            updateBreadcrumb([{ name: "Classes", action: "showClasses()" }]);
+        }
+        function showSubjects(cls) {
+            selectedClass = cls;
+            hideAllViews();
+            const container = document.getElementById('subject-view');
+            container.innerHTML = '';
+            cls.subjects.forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerText = sub.subjectName;
+                div.onclick = () => showChapters(sub);
+                container.appendChild(div);
+            });
+            container.classList.remove('hidden');
+            updateBreadcrumb([
+                { name: "Classes", action: "showClasses()" },
+                { name: cls.className, action: `showSubjects(selectedClass)` }
+            ]);
+        }
+        function showChapters(sub) {
+            selectedSubject = sub;
+            hideAllViews();
+            const container = document.getElementById('chapter-view');
+            container.innerHTML = '';
+            sub.chapters.forEach(chap => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerText = chap.chapterName;
+                div.onclick = () => showPDF(chap);
+                container.appendChild(div);
+            });
+            container.classList.remove('hidden');
+            updateBreadcrumb([
+                { name: "Classes", action: "showClasses()" },
+                { name: selectedClass.className, action: `showSubjects(selectedClass)` },
+                { name: sub.subjectName, action: `showChapters(selectedSubject)` }
+            ]);
+        }
+        function showPDF(chap) {
+            hideAllViews();
+            const container = document.getElementById('pdf-view');
+            const iframe = document.getElementById('pdf-frame');
+            iframe.src = 'https://docs.google.com/gview?embedded=true&url='
+                + encodeURIComponent(chap.pdf);
+            container.classList.remove('hidden');
+            updateBreadcrumb([
+                { name: "Classes", action: "showClasses()" },
+                { name: selectedClass.className, action: `showSubjects(selectedClass)` },
+                { name: selectedSubject.subjectName, action: `showChapters(selectedSubject)` },
+                { name: chap.chapterName, action: "" }
+            ]);
+        }
+        showClasses();
+    </script>
+</body>
+</html>
